@@ -1,4 +1,4 @@
-import { envsafe, str, bool } from "envsafe";
+import { envsafe, str, bool, num } from "envsafe";
 
 export const env = envsafe({
   AWS_ACCESS_KEY_ID: str(),
@@ -8,10 +8,12 @@ export const env = envsafe({
   BACKUP_DATABASE_URL: str({
     desc: 'The connection string of the database to backup.'
   }),
+  // REQUIRED, no default. Until 2026-10-02 this defaulted to '0 5 * * *' and the
+  // service carried BACKUP_SCHEDULE - a name nothing read - so the schedule
+  // that ran was the default and the variable that looked like it controlled
+  // it did nothing. A missing schedule now stops the service at startup.
   BACKUP_CRON_SCHEDULE: str({
     desc: 'The cron schedule to run the backup on.',
-    default: '0 5 * * *',
-    allowEmpty: true
   }),
   AWS_S3_ENDPOINT: str({
     desc: 'The S3 custom endpoint you want to use.',
@@ -46,6 +48,23 @@ export const env = envsafe({
   SUPPORT_OBJECT_LOCK: bool({
     desc: 'Enables support for buckets with object lock by providing an MD5 hash with the backup file',
     default: false
+  }),
+  // Retention (src/retention.ts). REQUIRED: RETENTION_DAYS was set on this
+  // service for months and read by nothing, so every backup was kept.
+  RETENTION_DAYS: num({
+    desc: 'Days to keep daily backups under BUCKET_SUBFOLDER.',
+  }),
+  MONTHLY_RETENTION_DAYS: num({
+    desc: 'Days to keep the monthly copy (first backup of each month).',
+  }),
+  MONTHLY_SUBFOLDER: str({
+    desc: 'Prefix holding the monthly copies; must differ from BUCKET_SUBFOLDER.',
+  }),
+  // Deleting backups is irreversible, so the safe direction is the default:
+  // retention only reports what it WOULD delete until this is set to false.
+  PRUNE_DRY_RUN: bool({
+    desc: 'Report retention deletions without making them.',
+    default: true,
   }),
   BACKUP_OPTIONS: str({
     desc: 'Any valid pg_dump option.',
