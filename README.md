@@ -16,7 +16,15 @@ A simple NodeJS application to backup your PostgreSQL database to S3 via a cron.
 
 - `BACKUP_DATABASE_URL` - The connection string of the database to backup.
 
-- `BACKUP_CRON_SCHEDULE` - The cron schedule to run the backup on. Example: `0 5 * * *`
+- `BACKUP_CRON_SCHEDULE` - **Required.** The cron schedule to run the backup on. Example: `0 5 * * *`
+
+- `RETENTION_DAYS` - **Required.** Days to keep daily backups under `BUCKET_SUBFOLDER`.
+
+- `MONTHLY_RETENTION_DAYS` - **Required.** Days to keep the monthly copy - the first backup of each calendar month, copied to `MONTHLY_SUBFOLDER`.
+
+- `MONTHLY_SUBFOLDER` - **Required.** Prefix for the monthly copies. Must differ from `BUCKET_SUBFOLDER`.
+
+- `PRUNE_DRY_RUN` - Defaults to `true`: retention logs what it would delete and deletes nothing. Set `false` to prune. Pruning only runs after a backup is uploaded and verified, never prunes an object whose name carries no date, and always keeps the newest 7 dailies and 3 monthlies.
 
 - `AWS_S3_ENDPOINT` - The S3 custom endpoint you want to use. Applicable for 3-rd party S3 services such as Cloudflare R2 or Backblaze R2.
 
